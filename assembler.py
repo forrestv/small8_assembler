@@ -69,9 +69,17 @@ instructions = {
     ('mulr', 0, 'd'): (0x71,),
 }
 
+def range_checker(val_func, length):
+    def f(x=val_func, l=length):
+        if x() < 0 or x() >= 256**l:
+            print >>sys.stderr, "value %i exceeded representable range" % (x(),)
+            sys.exit(1)
+    return f
+
 res = []
 equs = {} # equ name -> string
 labels = {} # label name -> address
+checks = []
 with open(sys.argv[1], 'rb') as f:
     for line in f:
         if '*' in line:
@@ -91,7 +99,7 @@ with open(sys.argv[1], 'rb') as f:
         split = line.split(None)
         
         if len(split) == 2 and split[0].lower() == 'include':
-            pass #print 'ignoring include', split[1]
+            pass #print >>sys.stderr, 'ignoring include', split[1]
             continue
         
         if len(split) == 3 and split[1].lower() == 'equ':
@@ -110,6 +118,7 @@ with open(sys.argv[1], 'rb') as f:
                 assert varargs == len(inst[1:])
                 for i, length in zip(xrange(varargs), inst[1:]):
                     val_func = lambda x=split1args[i]: resolve(x)
+                    checks.append(range_checker(val_func, length))
                     for j in xrange(length):
                         res.append(lambda x=val_func, y=j: (x() >> (8 * y)) & 0xFF)
                 found = True
@@ -118,7 +127,9 @@ with open(sys.argv[1], 'rb') as f:
             continue
         
         if split1[0].lower() == 'dc.b':
-            res.append(lambda x=split1[1]: resolve(x))
+            val_func = lambda x=split1[1]: resolve(x)
+            checks.append(range_checker(val_func, 1))
+            res.append(val_func)
             continue
         if split1[0].lower() == 'ds.b':
             for i in xrange(resolve(split1[1])):
@@ -132,8 +143,11 @@ with open(sys.argv[1], 'rb') as f:
         if split1[0].lower() == 'end':
             continue # ignored
         
-        print "don't understand", repr(line), split1
+        print >>sys.stderr, "don't understand", repr(line), split1
         sys.exit(1)
+
+for check in checks:
+    check()
 
 print '''Depth = 256;
 Width = 8;
