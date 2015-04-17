@@ -21,6 +21,10 @@ def resolve(x):
         assert False, x
 
 instructions = {
+    # format:
+    # (mnemonic, number_of_nonconstant_arguments, *constant_matched_arguments):
+    #     (opcode, *lengths_of_nonconstant_arguments_in_bytes),
+    
     ('ldai', 1): (0x84, 1),
     ('ldaa', 1): (0x88, 2),
     ('ldad', 0): (0x81,),
