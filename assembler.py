@@ -144,6 +144,6 @@ Content'''
 print '  Begin'
 for i, x in enumerate(res):
     print '%04X : %02X;' % (i, x())
-print '[%04X..00FF] : 00;' % (i+1,)
+print '[%04X..00FF] : 00;' % (len(res),)
 print 'End;'
 print
