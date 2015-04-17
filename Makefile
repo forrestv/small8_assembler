@@ -17,7 +17,7 @@ test: $(TEST_SRCS:test/%.asm=test_results/%.mif)
 
 
 clean:
-	rm -fr test_results
+	rm -fr test_results $(SRCS:%.asm=%.mif)
 
 
 .PHONY: test clean
